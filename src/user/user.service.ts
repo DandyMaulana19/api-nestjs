@@ -8,6 +8,14 @@ export class UserService {
   constructor(protected prismaService: PrismaService) {}
 
   async createUser(userData: CreateUserDto): Promise<User> {
+    const existingUser = await this.getUserByEmail(userData.email);
+
+    if (existingUser) {
+      throw new NotFoundException(
+        `User with email ${userData.email} already exists`,
+      );
+    }
+
     const user = await this.prismaService.user.create({
       data: userData,
     });
@@ -28,6 +36,39 @@ export class UserService {
       throw new NotFoundException(`User with id ${id} not found`);
     }
 
+    return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | null> {
+    const user = await this.prismaService.user.findUnique({
+      where: { email },
+    });
+
+    return user;
+  }
+
+  async updateUser(
+    id: number,
+    userData: Partial<CreateUserDto>,
+  ): Promise<User | null> {
+    await this.getUserById(id);
+
+    const user = await this.prismaService.user.update({
+      where: { id },
+      data: userData,
+    });
+
+    return user;
+  }
+
+  async deleteUser(id: number): Promise<User | null> {
+    const user = await this.prismaService.user.delete({
+      where: { id },
+    });
+
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
     return user;
   }
 }

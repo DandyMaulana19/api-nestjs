@@ -28,6 +28,15 @@ export class ZodValidationPipe implements PipeTransform {
           }),
         });
       }
+      return result.data;
     }
+    return value;
+  }
+
+  private isZodSchema(metatype?: unknown): metatype is ZodSchemaClass {
+    if (typeof metatype !== 'function') return false;
+
+    const schema = (metatype as unknown as ZodSchemaClass).schema;
+    return schema !== undefined && typeof schema.safeParse === 'function';
   }
 }
